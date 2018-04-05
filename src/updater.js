@@ -44,16 +44,29 @@ const dequeue = (state: OfflineState): OfflineState => {
   };
 };
 
+const isPartiallyEqual = (compare, dest) => {
+  for (const key of _.keys(compare)) {
+    const temp = compare[key]
+    if (!_.isEqual(temp, dest[key])) {
+      return false
+    }
+  }
+  return true
+}
+
 const dequeueAction = (state: OfflineState, dequeueAction): OfflineState => {
   const newOutbox = [];
   for (const action of state.outbox) {
-    if (action.type === dequeueAction.payload.type) {
-      if (_.isEqual(action.payload, dequeueAction.payload.payload)) {
-        continue;
-      }
-      newOutbox.push(action);
+    if (
+      action.type === dequeueAction.payload.type &&
+      isPartiallyEqual(dequeueAction.payload.toMatch, action.payload)
+    ) {
+      continue;
     }
+
+    newOutbox.push(action);
   }
+
   return {
     ...state,
     outbox: newOutbox,
